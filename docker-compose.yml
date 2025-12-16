@@ -12,10 +12,22 @@ services:
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_MEMORY_LIMIT', '256M');
         define('DISALLOW_FILE_EDIT', true);
+        define('DISABLE_WP_CRON', true);
     depends_on:
       wp_db:
         condition: service_healthy
     restart: unless-stopped
+
+  wp_cron:
+    image: curlimages/curl:8.5.0
+    restart: unless-stopped
+    depends_on:
+      - wordpress
+    command: >
+      sh -c 'while :; do
+        curl -fsS "http://wordpress/wp-cron.php?doing_wp_cron" >/dev/null || true;
+        sleep 60;
+      done'
 
   wp_db:
     image: mysql:8.4
